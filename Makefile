@@ -5,6 +5,24 @@ DOCKER_REPO_CI := dankcity/dank-link-decoder-ci
 GIT_HASH = $(shell git rev-parse --short=7 HEAD)
 GIT_TAG = $(shell git describe --tags --exact-match $(GIT_HASH) 2>/dev/null)
 
+.PHONY: install-poetry
+install-poetry:
+	curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python3
+
+.PHONY: shell
+shell:
+	docker run --rm -it --entrypoint ash $(DOCKER_REPO):local
+
+.PHONY: package
+package: clean-dist clean-pkg
+ifneq ($(CIRCLECI), )
+	source $(HOME)/.poetry/env && poetry build --format sdist
+else
+	poetry build --format sdist
+endif
+	mkdir -p pkg
+	find . -name "dank-link-decoder*.tar.gz" -exec tar --strip-components=1 -zxvf {} -C pkg \;
+
 .PHONY: build
 build:
 	docker build -t $(DOCKER_REPO):local .
@@ -40,17 +58,18 @@ test-unit:
 
 .PHONY: test-functional
 test-functional:
-	docker run --rm -it \
-		-w /clocme \
-		-v `pwd`:/clocme \
-		-v /var/run/docker.sock:/var/run/docker.sock \
-		-e IMAGE_NAME=$(DOCKER_REPO):local \
-		python:alpine \
-		ash -c ' \
-			set -e; \
-			pip install tox; \
-			tox -e functional \
-		'
+	echo "Not yet enabled"
+	# docker run --rm -it \
+	# 	-w /clocme \
+	# 	-v `pwd`:/clocme \
+	# 	-v /var/run/docker.sock:/var/run/docker.sock \
+	# 	-e IMAGE_NAME=$(DOCKER_REPO):local \
+	# 	python:alpine \
+	# 	ash -c ' \
+	# 		set -e; \
+	# 		pip install tox; \
+	# 		tox -e functional \
+	# 	'
 
 .PHONY: tag-latest
 tag-latest:
@@ -86,3 +105,11 @@ pull-ci:
 	docker pull $(DOCKER_REPO_CI):$(GIT_HASH)
 	docker tag $(DOCKER_REPO_CI):$(GIT_HASH) $(DOCKER_REPO):$(GIT_HASH)
 	docker tag $(DOCKER_REPO_CI):$(GIT_HASH) $(DOCKER_REPO):local
+
+.PHONY: clean-dist
+clean-dist:
+	rm -rf dist
+
+.PHONY: clean-pkg
+clean-pkg:
+	rm -rf pkg
