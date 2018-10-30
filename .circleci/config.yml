@@ -46,13 +46,15 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/buildpack-deps:bionic
-    working_directory: ~/cloc.me
+      - image: circleci/python:3.7.1
+    working_directory: ~/dank-link-decoder
     steps:
       - setup_remote_docker
       - checkout
       - run: make pull-latest || true
       - run: make tag-latest-as-local || true
+      - run: make install-poetry
+      - run: make package
       - run: make build
       - run: *docker-login
       - run: make push-ci

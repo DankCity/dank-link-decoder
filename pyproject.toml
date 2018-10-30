@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "dank-link-decoder"
+version = "0.1.0"
+description = ""
+authors = ["levi-rs <levi.noecker@gmail.com>"]
+include = ["tests/unit/*", "tox.ini"]
+
+[tool.poetry.dependencies]
+python = "*"
+
+[tool.poetry.dev-dependencies]
+pytest = "^3.0"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
